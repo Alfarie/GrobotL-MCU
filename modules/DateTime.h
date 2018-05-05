@@ -33,10 +33,6 @@ class DateTime : public Task
         return _datetime.hour * 60 + _datetime.minute;
     }
 
-    int GetSecond(){
-        return _datetime.second;
-    }
-
     String GetDateTimeString()
     {
         String str = AddZero(_datetime.hour) + String(_datetime.hour) + ":" +
@@ -96,13 +92,59 @@ class DateTime : public Task
         _datetime.month = bcdToDec(Wire.read());
         _datetime.year = bcdToDec(Wire.read());
     }
-     void ShowDateTime(DT dt)
+    
+	void ShowDateTime(DT dt)
     {
         // 12:00:00 12/12/17
         String str = "[PlantLab] Date Time: " + String(dt.hour) + ":" + String(dt.minute) + ":" + String(dt.second) + " " + String(dt.day) + "/" + String(dt.month) + "/" + String(dt.year);
         Serial.println(str);
     }
 
+	bool CheckRunning() //return true if clock is running, false if stopped
+	{
+		Wire.beginTransmission(ADDRESS);
+		Wire.write(decToBcd(0));
+		Wire.endTransmission();
+		Wire.requestFrom(ADDRESS, 1);
+		byte k = Wire.read();
+		if(k&0b10000000 == 0x00)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	void SetClockRun()
+	{
+		Wire.beginTransmission(ADDRESS);
+		Wire.write(decToBcd(0));
+		Wire.endTransmission();
+		Wire.requestFrom(ADDRESS, 1);
+		byte k = Wire.read(); //read last second in binary
+		
+		Wire.beginTransmission(ADDRESS);
+		Wire.write(decToBcd(0));
+		Wire.write(k&0b01111111); // set 0 to bit 7 of second starts the clock
+		Wire.endTransmission();
+	}
+	
+	void SetClockStop()
+	{
+		Wire.beginTransmission(ADDRESS);
+		Wire.write(decToBcd(0));
+		Wire.endTransmission();
+		Wire.requestFrom(ADDRESS, 1);
+		byte k = Wire.read(); //read last second in binary
+		
+		Wire.beginTransmission(ADDRESS);
+		Wire.write(decToBcd(0));
+		Wire.write(k|0b10000000); // set 1 to bit 7 of second byte stops the clock
+		Wire.endTransmission();
+	}
+	
   private:
     DT _datetime = {0,0,0,0,0,0,0};
     virtual bool OnStart()
