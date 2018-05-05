@@ -33,6 +33,10 @@ class DateTime : public Task
         return _datetime.hour * 60 + _datetime.minute;
     }
 
+    int GetSecond(){
+        return _datetime.second;
+    }
+
     String GetDateTimeString()
     {
         String str = AddZero(_datetime.hour) + String(_datetime.hour) + ":" +
