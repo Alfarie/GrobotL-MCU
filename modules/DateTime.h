@@ -100,7 +100,7 @@ class DateTime : public Task
         Serial.println(str);
     }
 
-	bool CheckRunning() //return true if clock is running, false if stopped
+	void CheckRunning() //this function check clock status and automatically starts clock if stops.
 	{
 		Wire.beginTransmission(ADDRESS);
 		Wire.write(decToBcd(0));
@@ -109,11 +109,15 @@ class DateTime : public Task
 		byte k = Wire.read();
 		if(k&0b10000000 == 0x00)
 		{
-			return true;
+			return;
 		}
 		else
 		{
-			return false;
+			Wire.beginTransmission(ADDRESS);
+			Wire.write(decToBcd(0));
+			Wire.write(k&0b01111111); // set 0 to bit 7 of second starts the clock
+			Wire.endTransmission();
+			return;
 		}
 	}
 
