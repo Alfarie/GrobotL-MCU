@@ -107,7 +107,7 @@ class DateTime : public Task
 		Wire.endTransmission();
 		Wire.requestFrom(ADDRESS, 1);
 		byte k = Wire.read();
-		if(k&0b10000000 == 0x00)
+		if((k&0b10000000) == 0x00)
 		{
 			return;
 		}
