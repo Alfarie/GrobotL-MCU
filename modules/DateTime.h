@@ -121,38 +121,10 @@ class DateTime : public Task
 		}
 	}
 
-	void SetClockRun()
-	{
-		Wire.beginTransmission(ADDRESS);
-		Wire.write(decToBcd(0));
-		Wire.endTransmission();
-		Wire.requestFrom(ADDRESS, 1);
-		byte k = Wire.read(); //read last second in binary
-		
-		Wire.beginTransmission(ADDRESS);
-		Wire.write(decToBcd(0));
-		Wire.write(k&0b01111111); // set 0 to bit 7 of second starts the clock
-		Wire.endTransmission();
-	}
-	
-	void SetClockStop()
-	{
-		Wire.beginTransmission(ADDRESS);
-		Wire.write(decToBcd(0));
-		Wire.endTransmission();
-		Wire.requestFrom(ADDRESS, 1);
-		byte k = Wire.read(); //read last second in binary
-		
-		Wire.beginTransmission(ADDRESS);
-		Wire.write(decToBcd(0));
-		Wire.write(k|0b10000000); // set 1 to bit 7 of second byte stops the clock
-		Wire.endTransmission();
-	}
-	
   private:
     DT _datetime = {0,0,0,0,0,0,0};
     virtual bool OnStart()
-    {{}
+    {
         Wire.begin();
         Serial.println("[Info] DateTime instance initialized...");
         Refresh();
@@ -163,6 +135,7 @@ class DateTime : public Task
     {
         // ShowDateTime(_datetime);
         Refresh();
+        CheckRunning();
     }
 
     
