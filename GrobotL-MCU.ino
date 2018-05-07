@@ -5,6 +5,10 @@ TaskManager taskManager;
 #include <Wire.h>
 #include <EEPROM.h>
 
+#define fanPin 4
+#define pumpPin 3
+#define ledPin 2
+
 int ON = HIGH;
 int OFF = LOW;
 
@@ -25,7 +29,7 @@ struct sensor_s
 
 #include "./modules/Control/Control.h"
 Control *channel[4];
-int ChannelGpio[4] = {2,3,4,5};
+int ChannelGpio[4] = {fanPin,pumpPin,ledPin,5};
 int ChannelStatus[4] = {LOW,LOW,LOW,LOW};
 void DigitalWrite(int ch, int status){
     digitalWrite(ChannelGpio[ch], status);
