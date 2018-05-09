@@ -77,20 +77,41 @@ class DateTime : public Task
         Serial.println(GetDateString());
     }
 
-    void Refresh()
+    void Refresh()//this function read register(date and time) of ds1307 and starts ds1307 if it was stopped.
     {
         Wire.beginTransmission(ADDRESS);
         Wire.write(decToBcd(0));
         Wire.endTransmission();
         Wire.requestFrom(ADDRESS, 7);
 
-        _datetime.second = bcdToDec(Wire.read() & 0x7f);
-        _datetime.minute = bcdToDec(Wire.read());
-        _datetime.hour = bcdToDec(Wire.read() & 0x3f); // Need to change this if 12 hour am/pm
-        _datetime.dayOfWeek = bcdToDec(Wire.read());
-        _datetime.day = bcdToDec(Wire.read());
-        _datetime.month = bcdToDec(Wire.read());
-        _datetime.year = bcdToDec(Wire.read());
+		byte bsecond = Wire.read();
+        byte bminute = Wire.read();
+        byte bhour = Wire.read(); // Need to change this if 12 hour am/pm
+        byte bdayOfWeek = Wire.read();
+        byte bday = Wire.read();
+        byte bmonth = Wire.read();
+        byte byear = Wire.read();
+		
+        _datetime.second = bcdToDec(bsecond & 0x7f);
+        _datetime.minute = bcdToDec(bminute);
+        _datetime.hour = bcdToDec(bhour & 0x3f); // Need to change this if 12 hour am/pm
+        _datetime.dayOfWeek = bcdToDec(bdayOfWeek);
+        _datetime.day = bcdToDec(bday);
+        _datetime.month = bcdToDec(bmonth);
+        _datetime.year = bcdToDec(byear);
+		
+		if((bsecond&0b10000000) == 0x00)
+		{
+			return;
+		}
+		else
+		{
+			Wire.beginTransmission(ADDRESS);
+			Wire.write(decToBcd(0));
+			Wire.write(bsecond&0b01111111); // set 0 to bit 7 of second starts the clock
+			Wire.endTransmission();
+			return;
+		}
     }
     
 	void ShowDateTime(DT dt)
@@ -135,7 +156,6 @@ class DateTime : public Task
     {
         // ShowDateTime(_datetime);
         Refresh();
-        CheckRunning();
     }
 
     
