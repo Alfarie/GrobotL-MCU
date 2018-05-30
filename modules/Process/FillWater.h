@@ -30,7 +30,7 @@ private:
   virtual bool OnStart()
   {
 
-    int ft_state = Solution::instance()->GetFloating();
+    /*int ft_state = Solution::instance()->GetFloating();
     currentTime = 0;
     flotingTime = 0;
     if (ft_state == 1)
@@ -46,13 +46,13 @@ private:
       return false;
     }
 
-    DigitalWrite(5, CH_ON);
+    DigitalWrite(5, CH_ON);*/
     return true;
   }
   virtual void OnUpdate(uint32_t delta_time)
   {
 
-    currentTime += (delta_time / 1000.0);
+    /*currentTime += (delta_time / 1000.0);
     //testCom.println(currentTime);
     
     if (!waterProcess.isFill)
@@ -76,6 +76,6 @@ private:
     else
     {
       flotingTime = 0;
-    }
+    }*/
   }
 };

@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "array": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "initializer_list": "cpp",
+        "valarray": "cpp"
+    }
+}

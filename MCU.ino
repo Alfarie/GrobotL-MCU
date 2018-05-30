@@ -6,14 +6,15 @@ TaskManager taskManager;
 #define EEPROM_SIZE 1024
 #define CHANNEL_NUMBER 6
 #define VERSION 2.0
-#define PROJECT "PLANTLAB-GROBOT"
+#define PROJECT "GROBOT-L"
 #define UPLOADDATE String(__DATE__) + " " +  String(__TIME__)
+
 #define ledPin 2
-#define co2Pin 4
-#define ecPin 6
-#define phPin 7
-#define pumpPin 3
-#define valvePin 5
+#define pumpPin 4
+#define fanPin 6
+#define ch4Pin 7
+#define ch5Pin 3
+#define ch6Pin 5
 
 String ShowBoardInfo(){
     String str = "INFOBOARD-VERSION" + String(VERSION) + "\r\n";
@@ -24,7 +25,7 @@ String ShowBoardInfo(){
 
 HardwareSerial &mpuCom    = Serial;
 HardwareSerial &debugCom  = Serial2;
-HardwareSerial &solCom = Serial1;
+// HardwareSerial &solCom = Serial1;
 HardwareSerial &testCom = Serial3;
 
 #include "./modules/Helper/DisplayLog.h"
@@ -56,15 +57,13 @@ struct sensor_s
 #include "./modules/Control/Control.h"
 Control *channel[CHANNEL_NUMBER];
 
-//
-int ChannelGpio[CHANNEL_NUMBER] = {ledPin,co2Pin,ecPin,phPin,pumpPin,valvePin};
+int ChannelGpio[CHANNEL_NUMBER] = {ledPin,pumpPin,fanPin,ch4Pin,ch5Pin,ch6Pin};
 int ChannelStatus[CHANNEL_NUMBER] = {LOW,LOW,LOW,LOW,LOW,LOW};
 
 void DigitalWrite(int ch, int status){
     digitalWrite(ChannelGpio[ch], status);
     ChannelStatus[ch] = status;
 }
-
 
 //General module
 #include "./modules/Memory/eeprom_manager.h"
@@ -98,7 +97,6 @@ void setup()
 
     debugCom.begin(115200);
     mpuCom.begin(38400);
-    solCom.begin(9600);
     testCom.begin(115200);
     
     debugCom.println("Initializing...");
@@ -108,11 +106,10 @@ void setup()
 
     EEPROM_Manager::InitEEPROM();
     taskManager.StartTask(RTC::instance());
-    taskManager.StartTask(WaterProcessControl::instance());
     taskManager.StartTask(Sensor::instance());
     taskManager.StartTask(Communication::instance());
-    taskManager.StartTask(MemoryCheck::instance());
     ChannelHanler::instance();
+    // taskManager.StartTask(WaterProcessControl::instance());
     MCU_STATE = "RDY";
     mpuCom.println(MCU_STATE);
 }
