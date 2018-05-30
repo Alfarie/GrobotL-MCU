@@ -4,10 +4,10 @@ class ChannelHanler : public Task
 {
   public:
     static ChannelHanler *s_instance;
-    
+
     ChannelHanler() : Task(MsToTaskTime(100))
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
         {
             pinMode(ChannelGpio[i], OUTPUT);
         }
@@ -19,11 +19,13 @@ class ChannelHanler : public Task
             s_instance = new ChannelHanler;
         return s_instance;
     }
-    
+
     void Update(int ch)
     {
+        DigitalWrite(ch-1, CH_OFF);
         taskManager.StopTask(channel[ch - 1]);
-        int mode = rom_channel[ch - 1].channel_mode;
+        int mode = rom_channel[ch - 1].mode;
+
         switch (mode)
         {
         case 0:
@@ -47,87 +49,231 @@ class ChannelHanler : public Task
             taskManager.StartTask(channel[ch - 1]);
             break;
         default:
-            DisplayLog::PrintError("ChannelHandler: Unknow channel mode " + String(mode));
+            testCom.println("ChannelHandler: Unknow channel mode " + String(mode));
         }
     }
-    static String GetChannelStatus()
+
+    static String CO2Status()
     {
-        String str = "[[" + String(ChannelStatus[0]) + "," + String(rom_channel[0].channel_mode) + "]," +
-                     "[" + String(ChannelStatus[1]) + "," + String(rom_channel[1].channel_mode) + "]," +
-                     "[" + String(ChannelStatus[2]) + "," + String(rom_channel[2].channel_mode) + "]]";
-        return str;
+        /*
+            {
+                mode: {0,1}, // active or inactive
+                crt:  1800, // current value
+                status: {0,1} // feeding or no feed
+            }
+        */
+        // String data = "{ \"mode\":" + String(rom_channel[1].mode) + ", \"crt\":" + String(Sensor::instance()->GetSensor(4)) +
+        //               ",\"status\":" + String(ChannelStatus[1]) + ",\"sensor\":" + String(rom_channel[1].sensor) + "}";
+        // return "{\"type\": \"co2-status\",\"data\":" + data + "}";
+
+        String data = "{st-co2," + String(rom_channel[1].mode) + 
+                    "," + String(Sensor::instance()->GetSensor(4)) + 
+                    "," + String(ChannelStatus[1]) + 
+                    "," + String(rom_channel[1].sensor)  + "}";
+        return data;
     }
-    String JsonTimer()
+    static String ECStatus()
     {
-        String ch[4];
-        for (int i = 0; i < 4; i++)
+        /*String data = "{ \"mode\":" + String(rom_channel[2].mode) + ", \"crt\":" + String(Sensor::instance()->GetSensor(5)) +
+                      ",\"status\":" + String(ChannelStatus[2]) + ",\"sensor\":" + String(rom_channel[2].sensor) + "}";
+
+        return "{\"type\": \"ec-status\",\"data\":" + data + "}";*/
+
+        String data = "{st-ec," + String(rom_channel[2].mode) + 
+                    "," + String(Sensor::instance()->GetSensor(5)) + 
+                    "," + String(ChannelStatus[2]) + 
+                    "," + String(rom_channel[2].sensor)  + "}";
+        return data;
+    }
+    static String PHStatus()
+    {
+        /*
+        String data = "{ \"mode\":" + String(rom_channel[3].mode) + ", \"crt\":" + String(Sensor::instance()->GetSensor(6)) +
+                      ",\"status\":" + String(ChannelStatus[3]) + ",\"sensor\":" + String(rom_channel[3].sensor) + "}";
+        return "{\"type\": \"ph-status\",\"data\":" + data + "}";
+        */
+        String data = "{st-ph," + String(rom_channel[3].mode) + 
+                    "," + String(Sensor::instance()->GetSensor(6)) + 
+                    "," + String(ChannelStatus[3]) + 
+                    "," + String(rom_channel[3].sensor)  + "}";
+        return data;
+    }
+
+    static String GpioStatus(){
+        String data = "{st-gpio,";
+        for (int i = 0 ; i < CHANNEL_NUMBER ; i++)
+        {
+            data += String(ChannelStatus[i]);
+            if( i < CHANNEL_NUMBER-1) data += ",";
+        }
+        data += "}";
+        return data;
+    }
+
+    static String JsonChannelStatus(int start_ch,int number)
+    {
+        /*
+            [
+                {
+                    status: 0,1
+                    mode: [0,5],
+                    sensor: rom_channel[i].sensor
+                }
+            ]
+        */
+        /*String ch[CHANNEL_NUMBER];
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
+        {
+            ch[i] = "{ \"status\": " + String(ChannelStatus[i]) + "," +
+                    "\"mode\": " + String(rom_channel[i].mode) + "," +
+                    "\"sensor\": " + String(rom_channel[i].sensor) + "}";
+        }
+        String chstr = "";
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
+        {
+            chstr += ch[i];
+            if (i != CHANNEL_NUMBER - 1)
+                chstr += ",";
+        }
+        return "{\"type\": \"channel-status\",\"data\": [" + chstr + "]}";*/
+
+        int end_ch = start_ch + number;
+        String data = "";
+        for (int i = start_ch ; i < end_ch ; i++)
+        {
+            String chstr = "{ct-chst," + String(i + 1) + 
+                        "," + String(rom_channel[i].mode) + 
+                        "," + String(rom_channel[i].sensor) +
+                        "," + String(rom_channel[i].manual.status) + "}";
+            data += chstr;
+        }
+        return data;
+    }
+
+    String JsonManual(int start_ch, int number)
+    {
+        /*String ch[CHANNEL_NUMBER];
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
+        {
+            String data = "\"manual\":{ \"status\":" + String(rom_channel[i].manual.status) + "}";
+            ch[i] = "{ \"ch\":" + String(i + 1) + "," + data + "}";
+        }
+        return "{\"type\": \"control-manual\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "]}";*/
+
+        int end_ch = start_ch + number;
+        String data = "";
+        for (int i = start_ch ; i < end_ch ; i++)
+        {
+            //{ct-manual, ch, status}
+            String chstr = "{ct-manual," + String(i + 1) + 
+                        "," + String(rom_channel[i].manual.status) + "}";
+            data += chstr;
+        }
+        return data;
+    }
+    String JsonSetpoint(int start_ch, int number)
+    {
+
+        int end_ch = start_ch + number;
+        String data = "";
+        for (int i = start_ch ; i < end_ch ; i++)
+        {
+            //{ct-manual, ch, status}
+            String chstr = "{ct-setpoint," + String(i + 1) + 
+                        "," + String(rom_channel[i].setpoint.working) +
+                        "," + String(rom_channel[i].setpoint.setpoint) +
+                        "," + String(rom_channel[i].setpoint.detecting) + "}";
+            data += chstr;
+        }
+        return data;
+
+        /*String ch[CHANNEL_NUMBER];
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
+        {
+            String data = "\"setpoint\": { \"working\":" + String(rom_channel[i].setpoint.working) + ",\"setpoint\":" + String(rom_channel[i].setpoint.setpoint) + ",\"detecting\":" + String(rom_channel[i].setpoint.detecting) + "}";
+            ch[i] = "{ \"ch\":" + String(i + 1)  + "," + data + "}";
+        }
+        return "{\"type\": \"control-setpoint\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "]}";
+        */
+
+    }
+
+    String JsonSetbound(int start_ch, int number)
+    {
+        int end_ch = start_ch + number;
+        String data = "";
+        for (int i = start_ch ; i < end_ch ; i++)
+        {
+            //{ct-manual, ch, status}
+            String chstr = "{ct-setbound," + String(i + 1) + 
+                        "," + String(rom_channel[i].setbound.upper) +
+                        "," + String(rom_channel[i].setbound.lower) + "}";
+            data += chstr;
+        }
+        return data;
+        /*String ch[CHANNEL_NUMBER];
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
+        {
+            String data = "\"setbound\": { \"upper\":" + String(rom_channel[i].setbound.upper) + ",\"lower\":" + String(rom_channel[i].setbound.lower) + "}";
+            ch[i] = "{ \"ch\":" + String(i + 1) + "," + data + "}";
+        }
+        return "{\"type\": \"control-setbound\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "]}";
+        */
+    }
+
+    String JsonIrrigation()
+    {
+        String ch[CHANNEL_NUMBER];
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
+        {
+            String data = "\"irrigation\":{ \"soil_upper\": " + String(rom_channel[i].irrigation.soil_upper) + ",\"soil_lower\":" + String(rom_channel[i].irrigation.soil_lower) + ",\"par_accum\":" + String(rom_channel[i].irrigation.par_accum) + ",\"mode\": " + String(rom_channel[i].irrigation.mode) + ",\"working\": " + String(rom_channel[i].irrigation.working) + "}";
+            ch[i] = "{ \"ch\":" + String(i + 1)  + "," + data + "}";
+        }
+        return "{\"type\": \"control-irrigation\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "]}";
+    }
+
+    String JsonTimer(int start_ch, int number)
+    {
+        /*
+        String ch[CHANNEL_NUMBER];
+        for (int i = 0; i < CHANNEL_NUMBER; i++)
         {
             String timer_list = "[";
-            for (int j = 0; j < rom_channel[i].timer_size; j++)
+            for (int j = 0; j < rom_channel[i].timer.size; j++)
             {
-                String timer = "[" + String(rom_channel[i].timer_list[j].st) + "," + String(rom_channel[i].timer_list[j].en) + "]";
+                String timer = "[" + String(rom_channel[i].timer.timer_list[j].st) + "," + String(rom_channel[i].timer.timer_list[j].en) + "]";
                 timer_list += timer;
-                if (j != (rom_channel[i].timer_size - 1))
+                if (j != (rom_channel[i].timer.size - 1))
                 {
                     timer_list += ",";
                 }
             }
             timer_list += "]";
-
-            ch[i] = "{\"mode\": 1,\"timer_mode\":" + String(rom_channel[i].timer_mode) +
-                    ",\"timer_list\":" + timer_list + "}";
+            // data = "{\"mode\": 1,\"timer_mode\":" + String(rom_channel[i].timer.mode) +
+            //         ",\"timer_list\":" + timer_list + "}";
+            String data = "\"timer\": { \"mode\":" + String(rom_channel[i].timer.mode) + ",\"list\":" + timer_list + "}";
+            ch[i] = "{ \"ch\":" + String(i + 1) + "," + data + "}";
         }
-        String data = "{\"type\": \"setting\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "]}";
-        return data;
-    }
-    String JsonSetting()
-    {
-        String ch[4];
-        for (int i = 0; i < 4; i++)
+        return "{\"type\": \"control-timer\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "," + ch[4] + "]}";
+        */
+       int end_ch = start_ch + number;
+        String data = "";
+        for (int i = start_ch ; i < end_ch ; i++)
         {
-            if (rom_channel[i].channel_mode == 0)
+            String timer_list = "[";
+            for (int j = 0; j < rom_channel[i].timer.size; j++)
             {
-                ch[i] = "{\"mode\": 0,\"gpio_status\":" + String(rom_channel[i].manual_status) + "}";
-            }
-            else if (rom_channel[i].channel_mode == 1)
-            {
-                String timer_list = "[";
-                for (int j = 0; j < rom_channel[i].timer_size; j++)
+                String timer = "[" + String(rom_channel[i].timer.timer_list[j].st) + "-" + String(rom_channel[i].timer.timer_list[j].en) + "]";
+                timer_list += timer;
+                if (j != (rom_channel[i].timer.size - 1))
                 {
-                    String timer = "[" + String(rom_channel[i].timer_list[j].st) + "," + String(rom_channel[i].timer_list[j].en) + "]";
-                    timer_list += timer;
-                    if (j != (rom_channel[i].timer_size - 1))
-                    {
-                        timer_list += ",";
-                    }
+                    timer_list += "-";
                 }
-                timer_list += "]";
-
-                ch[i] = "{\"mode\": 1,\"timer_mode\":" + String(rom_channel[i].timer_mode) +
-                        ",\"timer_list\":" + timer_list + "}";
             }
-            else if (rom_channel[i].channel_mode == 2)
-            {
-                ch[i] = "{\"mode\": 2,\"setpoint\":" + String(rom_channel[i].setpoint) +
-                        ",\"detecting\":" + String(rom_channel[i].detecting) +
-                        ",\"working\":" + String(rom_channel[i].working) +
-                        ",\"sensor\":" + String(rom_channel[i].setpoint_sensor) + "}";
-            }
-            else if (rom_channel[i].channel_mode == 3)
-            {
-                ch[i] = "{\"mode\": 2,\"upper\":" + String(rom_channel[i].setbound_upper) +
-                        ",\"lower\":" + String(rom_channel[i].setbound_lower) +
-                        ",\"sensor\":" + String(rom_channel[i].setbound_sensor) + "}";
-            }
-            else if (rom_channel[i].channel_mode == 4)
-            {
-                ch[i] = "{\"mode\": 2,\"soil_upper\":" + String(rom_channel[i].soil_upper) +
-                        ",\"soil_lower\":" + String(rom_channel[i].soil_lower) +
-                        ",\"par_accum\":" + String(rom_channel[i].par_accum) +
-                        ",\"mode\":" + String(rom_channel[i].irr_mode) + "}";
-            }
+            timer_list += "]";
+            data += "{ct-timer," + String(i+1) + "," + String(rom_channel[i].timer.mode) + 
+                            "," + timer_list + "}";
         }
-        String data = "{\"type\": \"setting\",\"data\": [" + ch[0] + "," + ch[1] + "," + ch[2] + "," + ch[3] + "]}";
         return data;
     }
 
@@ -135,9 +281,9 @@ class ChannelHanler : public Task
     void Init()
     {
         int i = 0;
-        for (i = 0; i < 4; i++)
+        for (i = 0; i < CHANNEL_NUMBER; i++)
         {
-            int mode = rom_channel[i].channel_mode;
+            int mode = rom_channel[i].mode;
             switch (mode)
             {
             case 0:
@@ -161,16 +307,17 @@ class ChannelHanler : public Task
                 taskManager.StartTask(channel[i]);
                 break;
             default:
-                DisplayLog::PrintError("ChannelHandler: Unknow channel mode " + String(mode));
+                testCom.println("ChannelHandler: Unknow channel mode " + String(mode));
             }
         }
     }
     virtual bool OnStart()
     {
+
+        return true;
     }
     virtual void OnUpdate(uint32_t delta_time)
     {
     }
 };
 ChannelHanler *ChannelHanler::s_instance = 0;
-// int ChannelHanler::channelStatus[4] = {OFF, OFF, OFF, OFF};

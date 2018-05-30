@@ -17,24 +17,25 @@ class Manual : public Control
     byte gpio_status;
     virtual bool OnStart()
     {
-
+        DigitalWrite(channel - 1, CH_OFF);
+        return true;
     }
     virtual void OnUpdate(uint32_t delta_time)
     {
-        // Serial.println("Manual   is running " + String(channel) + " " + String(gpio_status));
+        //debugCom.println("Manual   is running " + String(channel) + " " + String(gpio_status));
         // digitalWrite( ChannelGpio[channel-1], gpio_status);
         // ChannelHanler::SetChannelStatus( channel - 1, gpio_status);
         DigitalWrite(channel - 1, gpio_status);
     }
-
+    
     void UpdateFromRom()
     {
-        gpio_status = rom_channel[channel - 1].manual_status;
+        gpio_status = rom_channel[channel - 1].manual.status;
     }
     
     void SaveToRom()
     {
-        rom_channel[channel - 1].manual_status = gpio_status;
+        rom_channel[channel - 1].manual.status = gpio_status;
         EEPROM_Manager::Update(channel);
     }
 };

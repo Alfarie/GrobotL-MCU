@@ -6,10 +6,12 @@ class Control : public Task
     Control(int ms,int ch) : Task(MsToTaskTime(ms))
       {
         channel = ch;
+        currentTime = 0;
       };
 
   protected:
     int channel;
+    float currentTime;
     virtual void SetValue()
     {
       
@@ -18,10 +20,10 @@ class Control : public Task
     
     virtual bool OnStart()
     {
-
+      return true;
     }
     virtual void OnUpdate(uint32_t delta_time)
     {
-      Serial.println("Control is running " + String(channel));
+      
     }
 };

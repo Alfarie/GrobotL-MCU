@@ -24,10 +24,10 @@ public:
   static const int LED_TIMER_ADDR_ST = 100;
   static const int LED_TIMER_SIZE = LED_TIMER_ADDR_ST - sizeof(int);
   static const int LED_MODE = LED_TIMER_ADDR_ST - sizeof(int) * 2;   //led mode [1]timer  [2]manual
-  static const int LED_SW = LED_TIMER_ADDR_ST - sizeof(int) * 3; //led status [1]ON [2] OFF
+  static const int LED_SW = LED_TIMER_ADDR_ST - sizeof(int) * 3; //led status [1]CH_ON [2] CH_OFF
 
   static const int PUMP_PERIOD = 210;
   static const int PUMP_WORKING = PUMP_PERIOD - sizeof(int);
   static const int PUMP_MODE = PUMP_PERIOD - sizeof(int) * 2;   //PUMP mode [1]timer  [2]manual
-  static const int PUMP_STATUS = PUMP_PERIOD - sizeof(int) * 3; //led status [1]ON [2] OFF
+  static const int PUMP_STATUS = PUMP_PERIOD - sizeof(int) * 3; //led status [1]CH_ON [2] CH_OFF
 };

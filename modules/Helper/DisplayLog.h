@@ -13,11 +13,11 @@ class DisplayLog
     
     static void PrintError(String msg)
     {
-        Serial.println("[Error] " + msg);
+        //debugCom.println("[Error] " + msg);
     }
     static void PrintInfo(String msg)
     {
-        Serial.println("[Info] " + msg);
+        //debugCom.println("[Info] " + msg);
     }
 };
 DisplayLog *DisplayLog::s_instance = 0;
