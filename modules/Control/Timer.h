@@ -28,10 +28,11 @@ private:
     DigitalWrite(channel - 1, CH_OFF);
     return true;
   }
-  
+
   virtual void OnUpdate(uint32_t delta_time)
   {
     int currentMin = RTC::instance()->GetCurrentMin();
+    debugCom.println("Timer Mode: " + String(currentMin));
     if (mode == 0)
     {
       bool flag = false;

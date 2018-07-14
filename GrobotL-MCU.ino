@@ -25,7 +25,6 @@ String ShowBoardInfo(){
 
 HardwareSerial &mpuCom    = Serial;
 HardwareSerial &debugCom  = Serial2;
-// HardwareSerial &solCom = Serial1;
 HardwareSerial &testCom = Serial3;
 
 #include "./modules/Helper/DisplayLog.h"
@@ -92,13 +91,13 @@ WaterProcess *wt_process[6];
 
 void setup()
 {
-    Puppet::instance();
+    // Puppet::instance();
     Wire.begin();
 
     debugCom.begin(115200);
-    mpuCom.begin(38400);
+    mpuCom.begin(115200);
     testCom.begin(115200);
-    
+
     debugCom.println("Initializing...");
     debugCom.println(ShowBoardInfo());
     mpuCom.println(ShowBoardInfo());

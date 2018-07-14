@@ -11,6 +11,7 @@ public:
     cmdSize = 0;
     size = 0;
   };
+  
   static Communication *instance()
   {
     if (!s_instance)
