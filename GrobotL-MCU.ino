@@ -9,9 +9,9 @@ TaskManager taskManager;
 #define PROJECT "GROBOT-L"
 #define UPLOADDATE String(__DATE__) + " " +  String(__TIME__)
 
-#define ledPin 2
-#define pumpPin 4
-#define fanPin 6
+#define ledPin 4
+#define pumpPin 3
+#define fanPin 2
 #define ch4Pin 7
 #define ch5Pin 3
 #define ch6Pin 5
